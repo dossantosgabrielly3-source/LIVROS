@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="apple-touch-icon" href="icon.png">
+    <title>Leitor Vintage</title>
+    <style>
+        /* Estilos Base (Modo Sépia/Clássico) */
+        body { font-family: 'Palatino', Georgia, serif; margin: 0; transition: background 0.3s; }
+        body.sepia { background: #f4f1ea; color: #2b2b2b; }
+        body.night { background: #1a1a1a; color: #cccccc; }
+        
+        .navbar { 
+            background: linear-gradient(#b2b2b2, #5e5e5e); 
+            color: white; padding: 12px; text-align: center;
+            font-weight: bold; text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
+            border-bottom: 1px solid #444;
+        }
+
+        .toolbar {
+            background: #d1d1d1; padding: 10px;
+            border-bottom: 1px solid #999; text-align: center;
+        }
+
+        #viewer { 
+            padding: 30px; margin: 15px; border-radius: 4px;
+            min-height: 500px; line-height: 1.6; white-space: pre-wrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* Cores do Viewer dependendo do modo */
+        .sepia #viewer { background: #fff; border: 1px solid #ddd; }
+        .night #viewer { background: #262626; border: 1px solid #333; color: #bbb; }
+
+        button { 
+            padding: 8px 12px; font-size: 14px; font-weight: bold;
+            border-radius: 5px; border: 1px solid #888;
+            background: linear-gradient(#fff, #ccc);
+        }
+    </style>
+</head>
+<body class="sepia" id="bodyTag">
+
+<div class="navbar">MEU LEITOR VINTAGE</div>
+
+<div class="toolbar">
+    <select id="bookSelector" onchange="trocarLivro()" style="width:40%">
+        <option value="">Livros...</option>
+        <option value="livro1.txt">O Hobbit</option>
+        <option value="livro2.txt">Dom Casmurro</option>
+    </select>
+    <button onclick="mudarFonte(2)">A+</button>
+    <button onclick="toggleNight()">🌙</button>
+</div>
+
+<div id="viewer">Carregando...</div>
+
+<script>
+    var fontSize = parseInt(localStorage.getItem('minhaFonte')) || 18;
+    var modoNoite = localStorage.getItem('modoNoite') === 'true';
+
+    function toggleNight() {
+        modoNoite = !modoNoite;
+        aplicarModo();
+        localStorage.setItem('modoNoite', modoNoite);
+    }
+
+    function aplicarModo() {
+        var body = document.getElementById('bodyTag');
+        body.className = modoNoite ? 'night' : 'sepia';
+    }
+
+    function mudarFonte(delta) {
+        fontSize += delta;
+        if(fontSize > 36) fontSize = 18; // Reseta se ficar grande demais
+        document.getElementById('viewer').style.fontSize = fontSize + "px";
+        localStorage.setItem('minhaFonte', fontSize);
+    }
+
+    function trocarLivro(nomeArquivo) {
+        var arquivo = nomeArquivo || document.getElementById('bookSelector').value;
+        if (!arquivo) return;
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', arquivo, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                document.getElementById('viewer').innerText = xhr.responseText;
+                localStorage.setItem('ultimoLivro', arquivo);
+                document.getElementById('bookSelector').value = arquivo;
+                window.scrollTo(0,0);
+            }
+        };
+        xhr.send();
+    }
+
+    window.onload = function() {
+        document.getElementById('viewer').style.fontSize = fontSize + "px";
+        aplicarModo();
+        var ultimo = localStorage.getItem('ultimoLivro');
+        if (ultimo) trocarLivro(ultimo);
+    };
+</script>
+</body>
+</html>
